@@ -25,7 +25,6 @@ func main() {
 				Type string
 				Content string
 			}
-
 		}
 	}
 
@@ -34,11 +33,17 @@ func main() {
 		Text string
 	}
 
+	type Language struct {
+		Bytecrowd string
+		Languege string
+	}
+
     r := chi.NewRouter()
 
 	client, _ := mongo.Connect(context.TODO(), options.Client().ApplyURI(connectionString))
 
 	bytecrowds := client.Database("testingDB").Collection("bytecrowds")
+	//langueges := client.Database("testingDB").Collection("languages")
 
     r.Use(middleware.Logger)
 
@@ -65,11 +70,10 @@ func main() {
 				w.Write([]byte("Bytecrowd updated!"))
 			}
 		}
-		
 	})
 
 	r.Get("/get/{bytecrowd}", func(w http.ResponseWriter, r *http.Request) {
-		bytecrowdName := chi.URLParam (r, "bytecrowd")
+		bytecrowdName := chi.URLParam(r, "bytecrowd")
 		filter := bson.D{{"name", bytecrowdName}}
 
 		var result StoredBytecrowd
@@ -81,6 +85,45 @@ func main() {
 			w.WriteHeader(404)
 		}
 	})
+
+	//r.Get("/getLanguege/{bytecrowd}", func(w http.ResponseWriter, r *http.Request) {
+	//	bytecrowdName := chi.URLParam (r, "bytecrowd")
+	//	filter = bson.D{{"bytecrowd", bytecrowdName}}
+//
+	//	var result Language
+	//	languages.FindOne(context.TODO(), filter).Decode(&result)
+//
+	//	if result.Language != ""{
+	//		w.Write([]byte(result.Text))
+	//	} else {
+	//		w.WriteHeader(404)
+	//	}
+	//})
+//
+	//r.Post("/updateLanguage", func(w http.ResponseWriter, r *http.Request) {
+	//	var data Language 
+	//	err := json.NewDecoder(r.Body).Decode(&data)
+	//	if err != nil {
+	//		 http.Error(w, err.Error(), http.StatusBadRequest)
+	//		 return
+	//	}
+//
+	//	language := bson.D{{"bytecrowd", data.Bytecrowd}, {"language", data.Language}}
+	//	modifiedLanguage := bson.D{{"$set", bson.D{{"language", data.Language}}}}
+	//	filter := bson.D{{"bytecrowd", data.Language}}
+//
+	//	var result Language
+	//	languages.FindOne(context.TODO(), filter).Decode(&result)
+//
+	//	if result.Bytecrowd != "" {
+	//		bytecrowds.UpdateOne(context.TODO(), filter, modifiedLanguage)
+	//	} else {
+	//		result, _ := bytecrowds.InsertOne(context.TODO(), language)
+	//		if result != nil {
+	//			w.Write([]byte("Language updated!"))
+	//		}
+	//	}
+	//})
 
     http.ListenAndServe("127.0.0.1:5000", r)
 }
