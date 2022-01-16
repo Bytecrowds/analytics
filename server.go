@@ -18,10 +18,10 @@ const connectionString = "mongodb+srv://Tudor:u22hfwcAxwkt@bitecrowdsmaindb.qadv
 
 
 func main() {
-	type Bitecrowd struct {
+	type Bytecrowd struct {
 		Room string
 		Data struct {
-			BitecrowdText struct{
+			BytecrowdText struct{
 				Type string
 				Content string
 			}
@@ -29,7 +29,7 @@ func main() {
 		}
 	}
 
-	type StoredBitecrowd struct {
+	type StoredBytecrowd struct {
 		Name string
 		Text string
 	}
@@ -38,34 +38,48 @@ func main() {
 
 	client, _ := mongo.Connect(context.TODO(), options.Client().ApplyURI(connectionString))
 
-	bitecrowds := client.Database("testingDB").Collection("bitecrowds")
+	bytecrowds := client.Database("testingDB").Collection("bytecrowds")
 
     r.Use(middleware.Logger)
 
-	r.Post("/create", func(w http.ResponseWriter, r *http.Request) {
-		var data Bitecrowd 
+	r.Post("/update", func(w http.ResponseWriter, r *http.Request) {
+		var data Bytecrowd 
 		err := json.NewDecoder(r.Body).Decode(&data)
 		if err != nil {
 			 http.Error(w, err.Error(), http.StatusBadRequest)
 			 return
 		}
 
-		bitecrowd := bson.D{{"name", data.Room}, {"text", data.Data.BitecrowdText.Content}}
-		modifiedBitecrowd := bson.D{{"$set", bson.D{{"text", data.Data.BitecrowdText.Content}}}}
+		bytecrowd := bson.D{{"name", data.Room}, {"text", data.Data.BytecrowdText.Content}}
+		modifiedBytecrowd := bson.D{{"$set", bson.D{{"text", data.Data.BytecrowdText.Content}}}}
 		filter := bson.D{{"name", data.Room}}
 
-		var result StoredBitecrowd
-		bitecrowds.FindOne(context.TODO(), filter).Decode(&result)
+		var result StoredBytecrowd
+		bytecrowds.FindOne(context.TODO(), filter).Decode(&result)
 
 		if result.Name != "" {
-			bitecrowds.UpdateOne(context.TODO(), filter, modifiedBitecrowd)
+			bytecrowds.UpdateOne(context.TODO(), filter, modifiedBytecrowd)
 		} else {
-			result, _ := bitecrowds.InsertOne(context.TODO(), bitecrowd)
+			result, _ := bytecrowds.InsertOne(context.TODO(), bytecrowd)
 			if result != nil {
-				w.Write([]byte("Bitecrowd updated!"))
+				w.Write([]byte("Bytecrowd updated!"))
 			}
 		}
 		
+	})
+
+	r.Get("/get/{bytecrowd}", func(w http.ResponseWriter, r *http.Request) {
+		bytecrowdName := chi.URLParam (r, "bytecrowd")
+		filter := bson.D{{"name", bytecrowdName}}
+
+		var result StoredBytecrowd
+		bytecrowds.FindOne(context.TODO(), filter).Decode(&result)
+
+		if result.Text != "" {
+			w.Write([]byte(result.Text))
+		} else {
+			w.WriteHeader(404)
+		}
 	})
 
     http.ListenAndServe("127.0.0.1:5000", r)
