@@ -19,8 +19,19 @@ const connectionString = "mongodb+srv://Tudor:u22hfwcAxwkt@bitecrowdsmaindb.qadv
 
 func main() {
 	type Bitecrowd struct {
+		Room string
+		Data struct {
+			BitecrowdText struct{
+				Type string
+				Content string
+			}
+
+		}
+	}
+
+	type StoredBitecrowd struct {
 		Name string
-		BitecrowdText string
+		Text string
 	}
 
     r := chi.NewRouter()
@@ -31,31 +42,30 @@ func main() {
 
     r.Use(middleware.Logger)
 
-    r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-        w.Write([]byte("Hello World!"))
-    })
-
 	r.Post("/create", func(w http.ResponseWriter, r *http.Request) {
 		var data Bitecrowd 
-
 		err := json.NewDecoder(r.Body).Decode(&data)
 		if err != nil {
 			 http.Error(w, err.Error(), http.StatusBadRequest)
 			 return
 		}
-		
-		bitecrowd := bson.D{{"name", data.Name}, {"text", data.BitecrowdText}}
-		filter := bson.D{{"name", data.Name}}
 
-		result, _ := bitecrowds.FindOne(context.TODO(), bitecrowd)
-		if result != nil {
-			bitecrowds.UpdateOne(context.TODO(), filter, bitecrowd)
+		bitecrowd := bson.D{{"name", data.Room}, {"text", data.Data.BitecrowdText.Content}}
+		modifiedBitecrowd := bson.D{{"$set", bson.D{{"text", data.Data.BitecrowdText.Content}}}}
+		filter := bson.D{{"name", data.Room}}
+
+		var result StoredBitecrowd
+		bitecrowds.FindOne(context.TODO(), filter).Decode(&result)
+
+		if result.Name != "" {
+			bitecrowds.UpdateOne(context.TODO(), filter, modifiedBitecrowd)
 		} else {
 			result, _ := bitecrowds.InsertOne(context.TODO(), bitecrowd)
-				if result != nil {
-
-				}
+			if result != nil {
+				w.Write([]byte("Bitecrowd updated!"))
+			}
 		}
+		
 	})
 
     http.ListenAndServe("127.0.0.1:5000", r)
