@@ -35,7 +35,7 @@ func main() {
 
 	type Language struct {
 		Bytecrowd string
-		Languege string
+		Language string
 	}
 
     r := chi.NewRouter()
@@ -43,7 +43,7 @@ func main() {
 	client, _ := mongo.Connect(context.TODO(), options.Client().ApplyURI(connectionString))
 
 	bytecrowds := client.Database("testingDB").Collection("bytecrowds")
-	//langueges := client.Database("testingDB").Collection("languages")
+	languages := client.Database("testingDB").Collection("languages")
 
     r.Use(middleware.Logger)
 
@@ -67,7 +67,7 @@ func main() {
 		} else {
 			result, _ := bytecrowds.InsertOne(context.TODO(), bytecrowd)
 			if result != nil {
-				w.Write([]byte("Bytecrowd updated!"))
+				w.Write([]byte("Bytecrowd inserted!"))
 			}
 		}
 	})
@@ -86,44 +86,44 @@ func main() {
 		}
 	})
 
-	//r.Get("/getLanguege/{bytecrowd}", func(w http.ResponseWriter, r *http.Request) {
-	//	bytecrowdName := chi.URLParam (r, "bytecrowd")
-	//	filter = bson.D{{"bytecrowd", bytecrowdName}}
-//
-	//	var result Language
-	//	languages.FindOne(context.TODO(), filter).Decode(&result)
-//
-	//	if result.Language != ""{
-	//		w.Write([]byte(result.Text))
-	//	} else {
-	//		w.WriteHeader(404)
-	//	}
-	//})
-//
-	//r.Post("/updateLanguage", func(w http.ResponseWriter, r *http.Request) {
-	//	var data Language 
-	//	err := json.NewDecoder(r.Body).Decode(&data)
-	//	if err != nil {
-	//		 http.Error(w, err.Error(), http.StatusBadRequest)
-	//		 return
-	//	}
-//
-	//	language := bson.D{{"bytecrowd", data.Bytecrowd}, {"language", data.Language}}
-	//	modifiedLanguage := bson.D{{"$set", bson.D{{"language", data.Language}}}}
-	//	filter := bson.D{{"bytecrowd", data.Language}}
-//
-	//	var result Language
-	//	languages.FindOne(context.TODO(), filter).Decode(&result)
-//
-	//	if result.Bytecrowd != "" {
-	//		bytecrowds.UpdateOne(context.TODO(), filter, modifiedLanguage)
-	//	} else {
-	//		result, _ := bytecrowds.InsertOne(context.TODO(), language)
-	//		if result != nil {
-	//			w.Write([]byte("Language updated!"))
-	//		}
-	//	}
-	//})
+	r.Get("/getLanguage/{bytecrowd}", func(w http.ResponseWriter, r *http.Request) {
+		bytecrowdName := chi.URLParam(r, "bytecrowd")
+		filter := bson.D{{"bytecrowd", bytecrowdName}}
+
+		var result Language
+		languages.FindOne(context.TODO(), filter).Decode(&result)
+
+		if result.Language != ""{
+			w.Write([]byte(result.Language))
+		} else {
+			w.Write([]byte(""))
+		}
+	})
+
+	r.Post("/updateLanguage", func(w http.ResponseWriter, r *http.Request) {
+		var data Language 
+		err := json.NewDecoder(r.Body).Decode(&data)
+		if err != nil {
+			 http.Error(w, err.Error(), http.StatusBadRequest)
+			 return
+		}
+
+		language := bson.D{{"bytecrowd", data.Bytecrowd}, {"language", data.Language}}
+		modifiedLanguage := bson.D{{"$set", bson.D{{"language", data.Language}}}}
+		filter := bson.D{{"bytecrowd", data.Bytecrowd}}
+
+		var result Language
+		languages.FindOne(context.TODO(), filter).Decode(&result)
+
+		if result.Bytecrowd != "" {
+			languages.UpdateOne(context.TODO(), filter, modifiedLanguage)
+		} else {
+			result, _ := languages.InsertOne(context.TODO(), language)
+			if result != nil {
+				w.Write([]byte("Language inserted!"))
+			}
+		}
+	})
 
     http.ListenAndServe("127.0.0.1:5000", r)
 }
