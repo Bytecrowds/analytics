@@ -6,6 +6,8 @@ import (
     "github.com/go-chi/chi/v5"
     "github.com/go-chi/chi/v5/middleware"
 
+	"github.com/rs/cors"
+
 	"context"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -14,7 +16,7 @@ import (
 	"encoding/json"
 )
 
-const connectionString = "mongodb+srv://Tudor:u22hfwcAxwkt@bitecrowdsmaindb.qadvh.mongodb.net/testingDB?authSource=admin&replicaSet=atlas-1x2m3n-shard-0&w=majority&readPreference=primary&appname=MongoDB%20Compass&retryWrites=true&ssl=true"
+const connectionString = "mongodb+srv://Tudor:u22hfwcAxwkt@bitecrowdsmaindb.qadvh.mongodb.net/productionDB?authSource=admin&replicaSet=atlas-1x2m3n-shard-0&w=majority&readPreference=primary&appname=MongoDB%20Compass&retryWrites=true&ssl=true"
 
 
 func main() {
@@ -46,6 +48,7 @@ func main() {
 	languages := client.Database("testingDB").Collection("languages")
 
     r.Use(middleware.Logger)
+	r.Use(cors.Default().Handler)
 
 	r.Post("/update", func(w http.ResponseWriter, r *http.Request) {
 		var data Bytecrowd 
@@ -125,5 +128,5 @@ func main() {
 		}
 	})
 
-    http.ListenAndServe("127.0.0.1:5000", r)
+    http.ListenAndServe(":5000", r)
 }
