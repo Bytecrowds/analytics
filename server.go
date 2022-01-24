@@ -86,7 +86,7 @@ func main() {
 		if result.Text != "" {
 			w.Write([]byte(result.Text))
 		} else {
-			w.WriteHeader("")
+			w.Write([]byte(""))
 		}
 	})
 
