@@ -2,6 +2,7 @@ package main
 
 import (
     "net/http"
+	"os"
 
     "github.com/go-chi/chi/v5"
     "github.com/go-chi/chi/v5/middleware"
@@ -128,5 +129,10 @@ func main() {
 		}
 	})
 
-    http.ListenAndServe("", r)
+	port := os.Getenv("PORT")
+	if port == "" {
+    	port = "5000"
+	}
+
+    http.ListenAndServe(":" + port, r)
 }
