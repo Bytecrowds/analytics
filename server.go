@@ -44,8 +44,8 @@ func main() {
 
 	client, _ := mongo.Connect(context.TODO(), options.Client().ApplyURI(connectionString))
 
-	bytecrowds := client.Database("testingDB").Collection("bytecrowds")
-	languages := client.Database("testingDB").Collection("languages")
+	bytecrowds := client.Database("productionDB").Collection("bytecrowds")
+	languages := client.Database("productionDB").Collection("languages")
 
     r.Use(middleware.Logger)
 	r.Use(cors.Default().Handler)
