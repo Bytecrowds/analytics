@@ -2,7 +2,7 @@ package main
 
 import (
     "net/http"
-	"os"
+	"bytecrowds-database-server/configuration"
 
     "github.com/go-chi/chi/v5"
     "github.com/go-chi/chi/v5/middleware"
@@ -16,8 +16,6 @@ import (
 
 	"encoding/json"
 )
-
-const connectionString = "mongodb+srv://Tudor:u22hfwcAxwkt@bitecrowdsmaindb.qadvh.mongodb.net/productionDB?authSource=admin&replicaSet=atlas-1x2m3n-shard-0&w=majority&readPreference=primary&appname=MongoDB%20Compass&retryWrites=true&ssl=true"
 
 
 func main() {
@@ -41,12 +39,14 @@ func main() {
 		Language string
 	}
 
-    r := chi.NewRouter()
+    r := chi.NewRouter()	
+	
+	config := configuration.GetConfig()
 
-	client, _ := mongo.Connect(context.TODO(), options.Client().ApplyURI(connectionString))
-
-	bytecrowds := client.Database("productionDB").Collection("bytecrowds")
-	languages := client.Database("productionDB").Collection("languages")
+	database := config.Database
+	client, _ := mongo.Connect(context.TODO(), options.Client().ApplyURI(config.ConnectionString))
+	bytecrowds := client.Database(database).Collection("bytecrowds")
+	languages := client.Database(database).Collection("languages")
 
     r.Use(middleware.Logger)
 	r.Use(cors.Default().Handler)
@@ -129,10 +129,5 @@ func main() {
 		}
 	})
 
-	port := os.Getenv("PORT")
-	if port == "" {
-    	port = "5000"
-	}
-
-    http.ListenAndServe(":" + port, r)
+    http.ListenAndServe(":" + config.Port, r)
 }
