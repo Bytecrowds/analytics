@@ -2,7 +2,7 @@ package configuration
 
 import (
 	"os"
-	"github.com/joho/godotenv"
+	//"github.com/joho/godotenv"
 )
 
 type Config struct{
@@ -12,7 +12,7 @@ type Config struct{
 }
 
 func GetConfig() *Config {
-	godotenv.Load()
+	//godotenv.Load()
 	
 	port := os.Getenv("PORT")
 	if port == "" {
