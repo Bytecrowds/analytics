@@ -1,29 +1,36 @@
 package main
 
 import (
-    "net/http"
-	"bytecrowds-database-server/configuration"
+	"net/http"
 
-    "github.com/go-chi/chi/v5"
-    "github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+
+	"os"
+
+	"github.com/joho/godotenv"
 
 	"github.com/rs/cors"
 
 	"context"
+
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/bson"
 
 	"encoding/json"
 )
 
-
 func main() {
+	if os.Getenv("PRODUTION") != "1" && os.Getenv("PRODUCTION") != "true" {
+		godotenv.Load()
+	}
+
 	type Bytecrowd struct {
 		Room string
 		Data struct {
-			BytecrowdText struct{
-				Type string
+			BytecrowdText struct {
+				Type    string
 				Content string
 			}
 		}
@@ -36,27 +43,25 @@ func main() {
 
 	type Language struct {
 		Bytecrowd string
-		Language string
+		Language  string
 	}
 
-    r := chi.NewRouter()	
-	
-	config := configuration.GetConfig()
+	r := chi.NewRouter()
 
-	database := config.Database
-	client, _ := mongo.Connect(context.TODO(), options.Client().ApplyURI(config.ConnectionString))
+	database := os.Getenv("DATABASE")
+	client, _ := mongo.Connect(context.TODO(), options.Client().ApplyURI(os.Getenv("CONNECTION_STRING")))
 	bytecrowds := client.Database(database).Collection("bytecrowds")
 	languages := client.Database(database).Collection("languages")
 
-    r.Use(middleware.Logger)
+	r.Use(middleware.Logger)
 	r.Use(cors.Default().Handler)
 
 	r.Post("/update", func(w http.ResponseWriter, r *http.Request) {
-		var data Bytecrowd 
+		var data Bytecrowd
 		err := json.NewDecoder(r.Body).Decode(&data)
 		if err != nil {
-			 http.Error(w, err.Error(), http.StatusBadRequest)
-			 return
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
 
 		bytecrowd := bson.D{{"name", data.Room}, {"text", data.Data.BytecrowdText.Content}}
@@ -97,7 +102,7 @@ func main() {
 		var result Language
 		languages.FindOne(context.TODO(), filter).Decode(&result)
 
-		if result.Language != ""{
+		if result.Language != "" {
 			w.Write([]byte(result.Language))
 		} else {
 			w.Write([]byte(""))
@@ -105,11 +110,11 @@ func main() {
 	})
 
 	r.Post("/updateLanguage", func(w http.ResponseWriter, r *http.Request) {
-		var data Language 
+		var data Language
 		err := json.NewDecoder(r.Body).Decode(&data)
 		if err != nil {
-			 http.Error(w, err.Error(), http.StatusBadRequest)
-			 return
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
 
 		language := bson.D{{"bytecrowd", data.Bytecrowd}, {"language", data.Language}}
@@ -129,5 +134,5 @@ func main() {
 		}
 	})
 
-    http.ListenAndServe(":" + config.Port, r)
+	http.ListenAndServe(":"+os.Getenv("PORT"), r)
 }
