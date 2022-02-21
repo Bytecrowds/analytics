@@ -1,8 +1,6 @@
 package database
 
 import (
-	"fmt"
-
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -31,8 +29,7 @@ type Language struct {
 	Language  string
 }
 
-var database, gasit = os.LookupEnv("DATABASE")
-var _, __ = fmt.Print(database, gasit)
+var database = os.Getenv("DATABASE")
 var client, _ = mongo.Connect(context.TODO(), options.Client().ApplyURI(os.Getenv("CONNECTION_STRING")))
 var Bytecrowds = client.Database(database).Collection("bytecrowds")
 var Languages = client.Database(database).Collection("languages")
