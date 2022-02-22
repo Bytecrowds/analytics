@@ -9,25 +9,6 @@ import (
 	"context"
 )
 
-type Bytecrowd struct {
-	Room string
-	Data struct {
-		BytecrowdText struct {
-			Type    string
-			Content string
-		}
-	}
-}
-
-type StoredBytecrowd struct {
-	Name string
-	Text string
-}
-
-type Language struct {
-	Bytecrowd string
-	Language  string
-}
 
 var database = os.Getenv("DATABASE")
 var client, _ = mongo.Connect(context.TODO(), options.Client().ApplyURI(os.Getenv("CONNECTION_STRING")))

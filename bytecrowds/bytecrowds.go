@@ -2,6 +2,7 @@ package bytecrowds
 
 import (
 	"bytecrowds-database-server/database"
+	"bytecrowds-database-server/database/models"
 
 	"go.mongodb.org/mongo-driver/bson"
 
@@ -14,7 +15,7 @@ import (
 
 var bytecrowds = database.Bytecrowds
 
-type StoredBytecrowd = database.StoredBytecrowd
+type StoredBytecrowd = models.StoredBytecrowd
 
 func GetBytecrowd(ginContext *gin.Context) {
 	bytecrowdName := ginContext.Param("bytecrowd")
@@ -31,7 +32,7 @@ func GetBytecrowd(ginContext *gin.Context) {
 }
 
 func EditBytecrowd(ginContext *gin.Context) {
-	var data database.Bytecrowd
+	var data models.Bytecrowd
 	ginContext.BindJSON(&data)
 
 	bytecrowd := bson.D{{"name", data.Room}, {"text", data.Data.BytecrowdText.Content}}

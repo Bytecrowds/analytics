@@ -2,6 +2,7 @@ package bytecrowds
 
 import (
 	"bytecrowds-database-server/database"
+	"bytecrowds-database-server/database/models"
 
 	"go.mongodb.org/mongo-driver/bson"
 
@@ -14,7 +15,7 @@ import (
 
 var languages = database.Languages
 
-type Language = database.Language
+type Language = models.Language
 
 func GetLanguage(ginContext *gin.Context) {
 	bytecrowdName := ginContext.Param("bytecrowd")
