@@ -32,14 +32,13 @@ func GetLanguage(ginContext *gin.Context) {
 }
 
 func EditLanguage(ginContext *gin.Context) {
-	var data Language
+	var data, result Language
 	ginContext.BindJSON(&data)
 
 	language := bson.D{{"bytecrowd", data.Bytecrowd}, {"language", data.Language}}
 	modifiedLanguage := bson.D{{"$set", bson.D{{"language", data.Language}}}}
 	filter := bson.D{{"bytecrowd", data.Bytecrowd}}
 
-	var result Language
 	languages.FindOne(context.TODO(), filter).Decode(&result)
 
 	if result.Bytecrowd != "" {
