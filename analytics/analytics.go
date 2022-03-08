@@ -58,9 +58,10 @@ func InterceptRequest(ginContext *gin.Context) {
 		}
 		// we will increment the day hits only if the request comes from a new IP
 		if found == false {
+			addresses := append(searchDay.Addresses, data.IP)
 			modifiedDayStat := bson.D{{"$set", bson.D{
 				{"hits", searchDay.Hits + 1},
-				{"addresses", append(searchDay.Addresses, data.IP)},
+				{"addresses", addresses},
 			}}}
 			DayAnaytics.UpdateOne(context.TODO(), filterDayStat, modifiedDayStat)
 		}
