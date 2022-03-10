@@ -22,7 +22,7 @@ func InterceptRequest(ginContext *gin.Context) {
 	ginContext.BindJSON(&data)
 
 	filterIPstat := bson.D{{"ip", data.IP}}
-	IPstat := bson.D{{"ip", data.IP}, {"hits", 1}}
+	IPstat := bson.D{{"ip", data.IP}, {"hits", 1}, {"pages", []string{data.Page}}}
 
 	filterDayStat := bson.D{
 		{"day", strings.TrimSpace(time.Now().String()[:11])},
@@ -37,7 +37,23 @@ func InterceptRequest(ginContext *gin.Context) {
 	if searchIP.IP == "" {
 		IPanalytics.InsertOne(context.TODO(), IPstat)
 	} else {
-		modifiedIPstat := bson.D{{"$set", bson.D{{"hits", searchIP.Hits + 1}}}}
+		var modifiedIPstat bson.D
+		var found bool = false
+		for _, page := range searchIP.Pages {
+			if data.Page == page {
+				found = true
+				modifiedIPstat = bson.D{{"$set", bson.D{{"hits", searchIP.Hits + 1}}}}
+				break
+			}
+		}
+		if found == false {
+			pages := append(searchIP.Pages, data.Page)
+			modifiedIPstat = bson.D{{"$set", bson.D{
+				{"hits", searchIP.Hits + 1},
+				{"addresses", pages},
+			}}}
+		}
+
 		IPanalytics.UpdateOne(context.TODO(), filterIPstat, modifiedIPstat)
 	}
 
