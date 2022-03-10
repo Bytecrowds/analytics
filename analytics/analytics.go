@@ -50,7 +50,7 @@ func InterceptRequest(ginContext *gin.Context) {
 			pages := append(searchIP.Pages, data.Page)
 			modifiedIPstat = bson.D{{"$set", bson.D{
 				{"hits", searchIP.Hits + 1},
-				{"addresses", pages},
+				{"pages", pages},
 			}}}
 		}
 
