@@ -1,4 +1,4 @@
 # ENV specs
-- CONNECTION_STRING => string
-- DATABASE => string
-- PORT => int
+
+- UPSTASH_REDIS_REST_URL => string
+- UPSTASH_REDIS_REST_TOKEN => string
