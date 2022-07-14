@@ -3,6 +3,7 @@ import { Redis } from "@upstash/redis/cloudflare";
 
 const router = new Router();
 
+// Because cloudflare workers expose the env on fetch, we need to manually set the vars
 const redis = new Redis({
   url: "<UPSTASH_REDIS_REST_URL>",
   token: "<UPSTASH_REDIS_REST_TOKEN>",
@@ -21,13 +22,16 @@ router.post("/update", async ({ req, res }) => {
   text = req.body.text;
   language = req.body.language;
   if (!(await redis.exists(name)))
+    // if the bytecrowd doesn't exist, create it
     await redis.hmset(name, { text: text, language: "javascript()" });
   else {
     const storedBytecrowd = await redis.hgetall(name);
+    // if at least one element(text/language) changed , update the bytecrowd
     if (
       storedBytecrowd.text !== text ||
       storedBytecrowd.language !== language
     ) {
+      // if the request doesn't contain a new text/language, use the current one
       if (!text) text = storedBytecrowd.text;
       if (!language) language = storedBytecrowd.language;
       await redis.hmset(name, { text: text, language: language });
