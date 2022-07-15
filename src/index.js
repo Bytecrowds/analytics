@@ -5,9 +5,8 @@ const router = new Router();
 
 // Because cloudflare workers expose the env on fetch, we need to manually set the vars
 const redis = new Redis({
-  url: "https://eu2-large-spider-30471.upstash.io",
-  token:
-    "AXcHASQgZjU1M2Q2MjYtNzdhNy00NjY1LWIwZTktMDY1ZjM0MzFmNGQ0ZjNhMGQ4ZWI0MDA3NGY1OTg4YjU4NjQzN2E2ZDA3NzY=",
+  url: "<UPSTASH_REDIS_REST_URL>",
+  token: "<UPSTASH_REDIS_REST_TOKEN>",
 });
 
 router.get("/bytecrowd/:bytecrowd", async ({ req, res }) => {
