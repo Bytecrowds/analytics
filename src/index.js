@@ -45,6 +45,7 @@ router.post("/update", async ({ req, res }) => {
 
 router.post("/analytics", async ({ req, res }) => {
   const _updateArray = (name, stat) => {
+    // Update the day stats arrays if required.
     const array = storedDayStat[name];
 
     let didUpdate = false;
@@ -58,12 +59,16 @@ router.post("/analytics", async ({ req, res }) => {
     };
   };
 
-  const page = req.body.page;
-  const { country, continent } = req.cf;
-  const requestIP = req.headers.get("CF-Connecting-IP");
+  const requestStats = {
+    page: req.body.page,
+    country: req.cf.country,
+    continent: req.cf.continent,
+    requestIP: req.headers.get("CF-Connecting-IP"),
+  };
 
   const _date = new Date();
   const date =
+    // Months range from 0 to 11 so we need to increment by 1 to get the real value.
     _date.getFullYear() + " " + (_date.getMonth() + 1) + " " + _date.getDate();
 
   const storedDayStat = await analytics.hgetall(date);
@@ -71,14 +76,17 @@ router.post("/analytics", async ({ req, res }) => {
     // If this day wasn't recorded, create a new entry for it.
     await analytics.hmset(date, {
       hits: 1,
-      addresses: [requestIP],
+      addresses: [requestStats.requestIP],
       uniqueVisitors: 1,
-      countries: [country],
-      continents: [continent],
-      pages: [page],
+      countries: [requestStats.country],
+      continents: [requestStats.continent],
+      pages: [requestStats.page],
     });
   } else {
-    let { updatedArray, didUpdate } = _updateArray("addresses", requestIP);
+    let { updatedArray, didUpdate } = _updateArray(
+      "addresses",
+      requestStats.requestIP
+    );
     let uniqueVisitors = storedDayStat.uniqueVisitors;
     // If the addresses vector did update, it means a new IP visited the site.
     if (didUpdate) uniqueVisitors++;
@@ -87,11 +95,47 @@ router.post("/analytics", async ({ req, res }) => {
       hits: storedDayStat.hits + 1,
       addresses: updatedArray,
       uniqueVisitors: uniqueVisitors,
-      countries: _updateArray("countries", country).updatedArray,
-      continents: _updateArray("continents", continent).updatedArray,
-      pages: _updateArray("pages", page).updatedArray,
+      countries: _updateArray("countries", requestStats.country).updatedArray,
+      continents: _updateArray("continents", requestStats.continent)
+        .updatedArray,
+      pages: _updateArray("pages", requestStats.page).updatedArray,
     });
   }
+
+  const storedStats = {
+    pages: await analytics.zrange("pages", 0, -1, {
+      withScores: true,
+    }),
+    countries: await analytics.zrange("countries", 0, -1, {
+      withScores: true,
+    }),
+    continents: await analytics.zrange("continents", 0, -1, {
+      withScores: true,
+    }),
+  };
+
+  for (const stat in storedStats)
+    if (storedStats[stat].length == 0) {
+      if (stat === "countries")
+        // countries => country!
+        await analytics.zadd("countries", {
+          score: 1,
+          member: requestStats.country,
+        });
+      else
+        await analytics.zadd(stat, {
+          score: 1,
+          // pages => page.
+          member: requestStats[stat.substring(0, stat.length - 1)],
+        });
+    } else if (stat === "countries") {
+      await analytics.zincrby("countries", 1, requestStats.country);
+    } else
+      await analytics.zincrby(
+        stat,
+        1,
+        requestStats[stat.substring(0, stat.length - 1)]
+      );
 });
 
 export default {
