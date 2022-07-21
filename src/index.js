@@ -5,13 +5,15 @@ const router = new Router();
 
 // Because cloudflare workers expose the env on fetch, we need to manually set the vars.
 const bytecrowds = new Redis({
-  url: "BYTECROWDS_URL",
-  token: "BYTECROWDS_TOKEN",
+  url: "https://eu2-devoted-unicorn-30471.upstash.io",
+  token:
+    "AXcHASQgZjM3MjVmZmQtMzliMS00M2Y0LThlMDAtOTJlOTczOWEwNWE5MGMxZjI3NjE4OTdmNDUwYTkzNzQ3YmQ0YzUyYjE5MDg=",
 });
 
 const analytics = new Redis({
-  url: "ANALYTICS_URL",
-  token: "ANALYTICS_TOKEN",
+  url: "https://eu2-still-herring-30363.upstash.io",
+  token:
+    "AXabASQgNThmNmQwMTMtYWE0NC00NjE5LTg0YzctZjRhNTU1NzczODI1MThmOTY3MmY3ZjcxNDljMWEzZDJlMDkxN2EwYWNlMjU=",
 });
 
 router.get("/bytecrowd/:bytecrowd", async ({ req, res }) => {
@@ -22,24 +24,34 @@ router.get("/bytecrowd/:bytecrowd", async ({ req, res }) => {
 });
 
 router.post("/update", async ({ req, res }) => {
-  let name, text, language;
-  name = req.body.name;
-  text = req.body.text;
-  language = req.body.language;
+  let data = {
+    name: req.body.name,
+    text: req.body.text,
+    language: req.body.language,
+    requiresAuth: req.body.requiresAuth,
+  };
 
-  const storedBytecrowd = await bytecrowds.hgetall(name);
+  const storedBytecrowd = await bytecrowds.hgetall(data.name);
   if (!storedBytecrowd)
     // If the bytecrowd doesn't exist, create it.
-    await bytecrowds.hmset(name, { text: text, language: "javascript" });
+    await bytecrowds.hmset(data.name, {
+      text: data.text,
+      language: "javascript",
+      requiresAuth: false,
+    });
   else if (
-    // If at least one element(text/language) changed , update the bytecrowd.
-    storedBytecrowd.text !== text ||
-    storedBytecrowd.language !== language
+    // If at least one element changed , update the bytecrowd.
+    JSON.stringify(storedBytecrowd) != JSON.stringify(data)
   ) {
-    // If the request doesn't contain a new text/language, use the current one.
-    if (!text) text = storedBytecrowd.text;
-    if (!language) language = storedBytecrowd.language;
-    await bytecrowds.hmset(name, { text: text, language: language });
+    // If the request doesn't contain a new value for a field, use the current one.
+    for (let field in data)
+      if (!data[field]) data[field] = storedBytecrowd[field];
+
+    await bytecrowds.hmset(data.name, {
+      text: data.text,
+      language: data.language,
+      requiresAuth: data.requiresAuth,
+    });
   }
 });
 
