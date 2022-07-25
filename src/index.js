@@ -44,8 +44,7 @@ router.post("/bytecrowd/:bytecrowd", async ({ env, req, res }) => {
       // Auth by password.
       const password = req.body.password;
       if ((await env.BYTECROWDS.get(name)) !== password) {
-        bytecrowd["authFailed"] = true;
-        res.body = bytecrowd;
+        res.body = { authFailed: true };
         return;
       }
       const allowedIPs = updateAllowedIPs(bytecrowd, req);
