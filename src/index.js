@@ -1,9 +1,10 @@
-import Router from "@tsndr/cloudflare-worker-router";
+import { Router } from "@tsndr/cloudflare-worker-router";
 import { Redis } from "@upstash/redis/cloudflare";
 import { updateAllowedIPs, authByIP } from "./utils";
 const qr = require("qr-image");
 
 const router = new Router();
+router.cors();
 
 // Because cloudflare workers expose the env on fetch, we need to manually set the vars.
 const bytecrowds = new Redis({
