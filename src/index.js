@@ -37,7 +37,7 @@ export default {
       page: url.searchParams.get("page"),
       country: req.cf.country,
       continent: req.cf.continent,
-      // Hash the IP address
+      // Hash the IP address.
       requestIP: Array.from(
         new Uint8Array(
           await crypto.subtle.digest(
@@ -91,7 +91,6 @@ export default {
       });
     }
 
-    // pana aici
     const storedStats = {
       pages: await analytics.zrange("pages", 0, -1, {
         withScores: true,
@@ -116,7 +115,7 @@ export default {
           console.log(stat, requestStats[stat.substring(0, stat.length - 1)]);
           await analytics.zadd(stat, {
             score: 1,
-            // pages => page.
+            // pages => page
             member: requestStats[stat.substring(0, stat.length - 1)],
           });
         }
