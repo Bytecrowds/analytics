@@ -106,7 +106,7 @@ export default {
     for (const stat in storedStats)
       if (storedStats[stat].length == 0) {
         if (stat === "countries")
-          // countries => country!
+          // countries => country
           await analytics.zadd("countries", {
             score: 1,
             member: requestStats.country,
