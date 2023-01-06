@@ -1,6 +1,4 @@
 # ENV specs
 
-- BYTECROWDS_URL => string
-- BYTECROWDS_TOKEN => string
-- ANALYTICS_URL => string
-- ANALYTICS_TOKEN => string
+- UPSTASH_REST_URL => string
+- UPSTASH_REST_TOKEN => string
