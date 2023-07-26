@@ -1,22 +1,28 @@
 import { Redis } from "@upstash/redis/cloudflare";
 
-// Because cloudflare workers expose the env on fetch, we need to manually set the vars.
-const analytics = new Redis({
-  url: "UPSTASH_REST_URL",
-  token: "UPSTASH_REST_TOKEN",
-});
-
 export default {
   async fetch(req, env) {
+    const redis = Redis.fromEnv(env);
+
     const url = new URL(req.url);
 
     // https://<ANALYTICS_URL>.com/<path>/<subpath>/... => <path>
     if (url.pathname.split("/")[1] !== "analytics")
-      return new Response("unauthorized(try /analytics/...) ", { status: 401 });
+      return new Response("try /analytics", {
+        status: 404,
+        headers: new Headers({
+          "Access-Control-Allow-Origin": "https://www.bytecrowds.com",
+        }),
+      });
 
     const page = url.searchParams.get("page");
     if (!page)
-      return new Response("page query parameter is missing", { status: 400 });
+      return new Response("page query parameter is missing", {
+        status: 400,
+        headers: new Headers({
+          "Access-Control-Allow-Origin": "https://www.bytecrowds.com",
+        }),
+      });
 
     const _updateDayStatArray = (name, stat) => {
       // Update the day stats arrays if required.
@@ -59,10 +65,10 @@ export default {
       " " +
       _date.getDate();
 
-    const storedDayStat = await analytics.hgetall(date);
+    const storedDayStat = await redis.hgetall(date);
     if (!storedDayStat) {
       // If this day wasn't recorded, create a new entry for it.
-      await analytics.hset(date, {
+      await redis.hset(date, {
         hits: 1,
         addresses: [requestStats.requestIP],
         uniqueVisitors: 1,
@@ -79,7 +85,7 @@ export default {
       // If the addresses vector did update, it means a new IP visited the site.
       if (didUpdate) uniqueVisitors++;
 
-      await analytics.hset(date, {
+      await redis.hset(date, {
         hits: storedDayStat.hits + 1,
         addresses: updatedArray,
         uniqueVisitors: uniqueVisitors,
@@ -92,13 +98,13 @@ export default {
     }
 
     const storedStats = {
-      pages: await analytics.zrange("pages", 0, -1, {
+      pages: await redis.zrange("pages", 0, -1, {
         withScores: true,
       }),
-      countries: await analytics.zrange("countries", 0, -1, {
+      countries: await redis.zrange("countries", 0, -1, {
         withScores: true,
       }),
-      continents: await analytics.zrange("continents", 0, -1, {
+      continents: await redis.zrange("continents", 0, -1, {
         withScores: true,
       }),
     };
@@ -107,26 +113,29 @@ export default {
       if (storedStats[stat].length == 0) {
         if (stat === "countries")
           // countries => country
-          await analytics.zadd("countries", {
+          await redis.zadd("countries", {
             score: 1,
             member: requestStats.country,
           });
         else {
-          console.log(stat, requestStats[stat.substring(0, stat.length - 1)]);
-          await analytics.zadd(stat, {
+          await redis.zadd(stat, {
             score: 1,
             // pages => page
             member: requestStats[stat.substring(0, stat.length - 1)],
           });
         }
       } else if (stat === "countries") {
-        await analytics.zincrby("countries", 1, requestStats.country);
+        await redis.zincrby("countries", 1, requestStats.country);
       } else
-        await analytics.zincrby(
+        await redis.zincrby(
           stat,
           1,
           requestStats[stat.substring(0, stat.length - 1)]
         );
-    return new Response("ok");
+    return new Response("ok", {
+      headers: new Headers({
+        "Access-Control-Allow-Origin": "https://www.bytecrowds.com",
+      }),
+    });
   },
 };
