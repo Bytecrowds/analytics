@@ -1,4 +1,3 @@
 # ENV specs
 
-- UPSTASH_REST_URL => string
-- UPSTASH_REST_TOKEN => string
+[.dev.vars.example](./.dev.vars.example)

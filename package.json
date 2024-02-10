@@ -2,7 +2,7 @@
   "name": "bytecrowds-backend",
   "version": "0.0.0",
   "devDependencies": {
-    "wrangler": "^2.6.2"
+    "wrangler": "^3.28.1"
   },
   "private": true,
   "scripts": {
@@ -10,6 +10,6 @@
     "deploy": "wrangler publish"
   },
   "dependencies": {
-    "@upstash/redis": "^1.18.4"
+    "@upstash/redis": "^1.28.3"
   }
 }
